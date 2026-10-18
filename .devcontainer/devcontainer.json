@@ -1,0 +1,15 @@
+{
+  "name": "PC Configurator",
+  "forwardPorts": [8000, 5173],
+  "portsAttributes": {
+    "8000": {
+      "label": "Laravel API",
+      "onAutoForward": "silent"
+    },
+    "5173": {
+      "label": "Vite UI",
+      "onAutoForward": "openBrowser",
+      "visibility": "public"
+    }
+  }
+}
