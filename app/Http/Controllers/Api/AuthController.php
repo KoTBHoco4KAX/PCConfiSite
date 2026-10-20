@@ -16,9 +16,6 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    /**
-     * POST /api/auth/register
-     */
     public function register(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -34,29 +31,23 @@ class AuthController extends Controller
                 'password' => Hash::make($validated['password']),
             ]);
 
-            $buyerRole = Role::where('slug', 'buyer')->first();
-            if ($buyerRole) {
-                $user->roles()->attach($buyerRole->id);
-            }
+            // firstOrCreate защитит от ошибки, если роли вдруг нет в БД
+            $buyerRole = Role::firstOrCreate(['slug' => 'buyer'], ['name' => 'Покупатель']);
+            $user->roles()->attach($buyerRole->id);
 
             return $user;
         });
 
-        // Письмо с подтверждением
         $user->sendEmailVerificationNotification();
-
         $token = $user->createToken('api-token')->plainTextToken;
 
         return response()->json([
             'user'  => $this->serializeUser($user->load('roles')),
             'token' => $token,
-            'message' => 'Регистрация успешна. Проверьте почту для подтверждения.',
+            'message' => 'Регистрация успешна. Проверьте почту.',
         ], 201);
     }
 
-    /**
-     * POST /api/auth/login
-     */
     public function login(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -80,9 +71,6 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * GET /api/auth/me
-     */
     public function me(Request $request): JsonResponse
     {
         return response()->json([
@@ -90,23 +78,13 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * POST /api/auth/logout
-     */
     public function logout(Request $request): JsonResponse
     {
         $token = $request->user()->currentAccessToken();
-
-        if ($token) {
-            $token->delete();
-        }
-
+        if ($token) $token->delete();
         return response()->json(['message' => 'Выход выполнен.']);
     }
 
-    /**
-     * GET /api/auth/email/verify/{id}/{hash}?expires=...&signature=...
-     */
     public function verifyEmail(Request $request, int $id, string $hash): RedirectResponse|JsonResponse
     {
         $user = User::find($id);
@@ -123,17 +101,15 @@ class AuthController extends Controller
             $user->markEmailAsVerified();
         }
 
-        $frontend = rtrim((string) env('FRONTEND_URL', 'http://localhost:5173'), '/');
+        // МАГИЯ ЗДЕСЬ: Берем текущий домен, с которого пришел запрос (т.е. твой slow-cat...)
+        // И перекидываем туда, а не на localhost.
+        $baseUrl = rtrim($request->getSchemeAndHttpHost(), '/');
 
-        return redirect($frontend . '/?verified=1');
+        return redirect($baseUrl . '/?verified=1');
     }
 
-    /**
-     * POST /api/auth/email/resend
-     */
     public function resendVerification(Request $request): JsonResponse
     {
-        /** @var User $user */
         $user = $request->user();
 
         if ($user->hasVerifiedEmail()) {
@@ -145,9 +121,6 @@ class AuthController extends Controller
         return response()->json(['message' => 'Письмо отправлено повторно.']);
     }
 
-    /**
-     * @return array<string, mixed>
-     */
     private function serializeUser(User $user): array
     {
         return [
