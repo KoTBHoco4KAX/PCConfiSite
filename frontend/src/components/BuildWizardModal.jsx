@@ -511,15 +511,6 @@ export default function BuildWizardModal({
         </div>
 
         <div className="flex items-center justify-between gap-3 border-t border-slate-800 bg-slate-950/40 px-6 py-4">
-          <button
-            type="button"
-            onClick={handleClose}
-            disabled={loading}
-            className="text-xs font-medium text-slate-500 transition-colors hover:text-slate-300 disabled:opacity-40"
-          >
-            Собрать вручную
-          </button>
-
           <div className="flex items-center gap-2">
             <button type="button" onClick={goBack} disabled={isFirst || loading} className="btn-ghost !px-3.5 !py-2.5">
               <ChevronLeft size={15} />
