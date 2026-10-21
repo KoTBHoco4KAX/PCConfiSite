@@ -15,7 +15,13 @@ const EMPTY_FORM = { id: null, name: '', email: '', password: '', roles: ['buyer
 
 export default function UserManagementModal({ isOpen, onClose, currentUserId }) {
   const [users, setUsers] = useState([]);
-  const [roles, setRoles] = useState([]);
+  
+  const [roles] = useState([
+    { slug: 'buyer', name: 'Покупатель' },
+    { slug: 'seller', name: 'Продавец' },
+    { slug: 'admin', name: 'Администратор' }
+  ]);
+
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState([]);
@@ -26,7 +32,6 @@ export default function UserManagementModal({ isOpen, onClose, currentUserId }) 
 
   useEffect(() => {
     if (!isOpen) return;
-    loadRoles();
     loadUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
@@ -36,13 +41,6 @@ export default function UserManagementModal({ isOpen, onClose, currentUserId }) 
     const t = setTimeout(() => setSuccess(''), 2500);
     return () => clearTimeout(t);
   }, [success]);
-
-  const loadRoles = async () => {
-    try {
-      const { data } = await client.get('/manage/roles');
-      setRoles(data.roles || []);
-    } catch { /* ignore */ }
-  };
 
   const loadUsers = async (q = '') => {
     setLoading(true);
@@ -362,7 +360,7 @@ export default function UserManagementModal({ isOpen, onClose, currentUserId }) 
                         }`}
                       >
                         <Icon size={13} className={active ? meta?.color : ''} />
-                        {r.name}
+                        {meta?.label || r.name}
                       </button>
                     );
                   })}

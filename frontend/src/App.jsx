@@ -3,7 +3,7 @@ import {
   Cpu, Monitor, CircuitBoard, MemoryStick, Fan, HardDrive, Box, Zap,
   Sparkles, ShoppingCart, User, LogOut, Loader2, CheckCircle2,
   AlertTriangle, XCircle, Wand2, Save, Bookmark, Shield, Store, Users,
-  Mail, Send,
+  Mail, Send, ShoppingBag,
 } from 'lucide-react';
 
 import client, {
@@ -108,7 +108,8 @@ export default function App() {
     () => Boolean(localStorage.getItem(TOKEN_KEY))
   );
 
-  const roles = Array.isArray(user?.roles) ? user.roles : [];
+  const rawRoles = Array.isArray(user?.roles) ? user.roles : [];
+  const roles = rawRoles.map(r => r === 'user' ? 'buyer' : r); // Маппинг старых юзеров
   const isAdmin  = roles.includes('admin');
   const isSeller = roles.includes('seller') || isAdmin;
   const isEmailVerified = Boolean(user?.email_verified_at);
@@ -119,6 +120,7 @@ export default function App() {
   const [showWizardModal, setShowWizardModal] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showBuildsModal, setShowBuildsModal] = useState(false);
+  const [buildsTab, setBuildsTab] = useState('drafts');
   const [showOrdersManageModal, setShowOrdersManageModal] = useState(false);
   const [showUsersModal, setShowUsersModal] = useState(false);
 
@@ -145,7 +147,6 @@ export default function App() {
     return () => clearTimeout(t);
   }, [flashMessage]);
 
-  // Обработка ?verified=1 после перехода по ссылке из письма
   useEffect(() => {
     if (!isAuthenticated) return;
     const params = new URLSearchParams(window.location.search);
@@ -399,14 +400,25 @@ export default function App() {
             </button>
 
             {isAuthenticated && isEmailVerified && (
-              <button
-                type="button"
-                onClick={() => setShowBuildsModal(true)}
-                className="hidden items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2 text-xs font-medium text-slate-300 transition-all hover:border-indigo-500/40 hover:text-white md:inline-flex"
-              >
-                <Bookmark size={14} />
-                Черновики
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => { setBuildsTab('drafts'); setShowBuildsModal(true); }}
+                  className="hidden items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2 text-xs font-medium text-slate-300 transition-all hover:border-indigo-500/40 hover:text-white md:inline-flex"
+                >
+                  <Bookmark size={14} />
+                  Черновики
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => { setBuildsTab('orders'); setShowBuildsModal(true); }}
+                  className="hidden items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2 text-xs font-medium text-slate-300 transition-all hover:border-indigo-500/40 hover:text-white md:inline-flex"
+                >
+                  <ShoppingBag size={14} />
+                  Мои заказы
+                </button>
+              </>
             )}
 
             {isSeller && isEmailVerified && (
@@ -416,7 +428,7 @@ export default function App() {
                 className="hidden items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs font-semibold text-amber-300 transition-all hover:border-amber-500/50 hover:bg-amber-500/10 md:inline-flex"
               >
                 <Store size={14} />
-                Заказы
+                Все заказы
               </button>
             )}
 
@@ -484,7 +496,6 @@ export default function App() {
           </div>
         )}
 
-        {/* Баннер «подтвердите почту» */}
         {isAuthenticated && !isEmailVerified && (
           <div className="mb-4 flex flex-col gap-3 rounded-xl border border-amber-500/40 bg-amber-500/5 px-4 py-3 sm:flex-row sm:items-center">
             <div className="flex items-start gap-2 flex-1">
@@ -761,6 +772,7 @@ export default function App() {
         onClose={() => setShowBuildsModal(false)}
         onLoadBuild={handleLoadBuild}
         isAdmin={isAdmin}
+        initialTab={buildsTab}
       />
 
       <OrdersManageModal

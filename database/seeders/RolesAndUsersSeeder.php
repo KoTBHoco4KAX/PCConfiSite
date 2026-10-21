@@ -48,11 +48,12 @@ class RolesAndUsersSeeder extends Seeder
         ];
 
         foreach ($demoUsers as $data) {
-            $user = User::firstOrCreate(
+                $user = User::updateOrCreate(
                 ['email' => $data['email']],
                 [
                     'name'     => $data['name'],
                     'password' => Hash::make($data['password']),
+                    'email_verified_at' => now(), // <--- ВОТ ЭТА СТРОКА
                 ]
             );
             $user->roles()->syncWithoutDetaching($data['roles']);

@@ -15,12 +15,16 @@ const ORDER_STATUS = {
   cancelled:      'Отменён',
 };
 
-export default function SavedBuildsModal({ isOpen, onClose, onLoadBuild, isAdmin }) {
-  const [tab, setTab] = useState('drafts');
+export default function SavedBuildsModal({ isOpen, onClose, onLoadBuild, isAdmin, initialTab = 'drafts' }) {
+  const [tab, setTab] = useState(initialTab);
   const [builds, setBuilds] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState([]);
+
+  useEffect(() => {
+    if (isOpen) setTab(initialTab);
+  }, [isOpen, initialTab]);
 
   useEffect(() => {
     if (!isOpen) return;
